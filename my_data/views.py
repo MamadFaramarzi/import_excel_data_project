@@ -8,7 +8,7 @@ import pandas as pd
 from .models import Data
 from .serializers import DataSerializers
 
-@api_view(['POST'])
+@api_view(['GET','POST'])
 def show_data(request):
     if request.method == 'POST' and request.FILES.get('file'):
         excel_file = request.FILES['Excel_Data.xlsx']
