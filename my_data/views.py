@@ -11,8 +11,8 @@ from .serializers import DataSerializers
 @api_view(['POST'])
 def show_data(request):
     if request.method == 'POST' and request.FILES.get('file'):
-        excel_file = request.FILES['file']
-        df = pd.read_excel('Excel_Data.xlsx')
+        excel_file = request.FILES['Excel_Data.xlsx']
+        df = pd.read_excel(excel_file)
 
         serializer = DataSerializers(data=df.to_dict(orient='records'), many=True)
         if serializer.is_valid():
