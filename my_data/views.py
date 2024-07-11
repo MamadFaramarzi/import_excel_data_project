@@ -1,14 +1,10 @@
-from django.shortcuts import render
-from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from rest_framework import status
-
 import pandas as pd
-
-from .models import Data
 from .serializers import DataSerializers
 
-@api_view(['GET','POST'])
+@api_view(['GET', 'POST'])
 def show_data(request):
     if request.method == 'POST' and request.FILES.get('file'):
         excel_file = request.FILES['Excel_Data.xlsx']
@@ -20,8 +16,6 @@ def show_data(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     return Response({"error": "No file found in request"}, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 
