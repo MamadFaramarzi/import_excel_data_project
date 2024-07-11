@@ -10,7 +10,7 @@ from .serializers import DataSerializers
 
 
 @api_view()
-def show_data_view(request,):
+def show_data(request,):
     # my_data = Data.objects.all()
     # serializer = DataSerializers(my_data, many=True)
     serializer = DataSerializers(data=df.to_dict(orient='records'), many=True)
