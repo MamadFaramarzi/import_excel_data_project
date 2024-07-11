@@ -9,6 +9,7 @@ django = "*"
 djangorestframework = "*"
 openpyxl = "*"
 mysqlclient = "*"
+django-debug-toolbar = "*"
 
 [dev-packages]
 
