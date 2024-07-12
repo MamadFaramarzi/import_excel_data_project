@@ -15,17 +15,17 @@ class ImportApiView(APIView):
     # queryset = Data.objects.all()
 
     def post(self, request):
-        try :
+        try:
             data = request.FILES
             serializer = self.serializer_class(data=data)
             if not serializer.is_valid():
                 return Response({
-                    'status':False,
-                    'massage': 'Provide a valid file'
+                    'status': False,
+                    'message': 'Provide a valid file'
                 },status=status.HTTP_400_BAD_REQUEST)
 
-            exel_file = data.get('file')
-            df = pd.read_excel(exel_file,sheet_name=0)
+            excel_file = data.get('file')
+            df = pd.read_excel(excel_file,sheet_name=0)
 
             data_list = []
             for index, row in df.iterrows():
@@ -36,10 +36,10 @@ class ImportApiView(APIView):
                 quantity = row['quantity']
                 unit_price = row['unit_price']
                 total_price = row['total_price']
-                data = Data.objects.all()
-                if data.exist():
-                    continue
-                date = Data(
+                # data = Data.objects.all()
+                # if data.exist():
+                #     continue
+                data = Data(
                     date=date,
                     location=location,
                     name=name,
@@ -52,47 +52,56 @@ class ImportApiView(APIView):
             Data.objects.bulk_create(data_list)
             return Response({
                 'status': True,
-                'massage': 'data imported successfully'
+                'message': 'data imported successfully'
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e :
             return Response({
                 'status': False,
-                'massage':'not complete import'
+                'message':'not complete import'
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
-        # df = pd.read_excel('./Excel_Data.xlsx', header=None,
-        #                    names=['date', 'location', 'name', 'product', 'quantity', 'unit_price', 'total_price'])
-        #
-        # data_list = []
-        # for index, row in df.iterrows():
-        #     data_dict = {
-        #         'date': row['date'],
-        #         'location': row['location'],
-        #         'name': row['name'],
-        #         'product': row['product'],
-        #         'quantity': row['quantity'],
-        #         'unit_price': row['unit_price'],
-        #         'total_price': row['total_price'],
-        #     }
-        #     # df['date_time'] = pd.to_datetime(df['date_time'], errors='coerce').dt.strftime('%Y-%m-%d')
-        #
-        #     data_list.append(data_dict)
-        #
-        # print(f'data frame: {df}')
-        # serializer = self.get_serializer(data=data_list, many=True)
-        # serializer.is_valid(raise_exception=True)
-        # serializer.save()
-        # return Response(serializer.data, status=status.HTTP_201_CREATED)
-        #
-        #
+class ExportApiView(APIView):
+    def post(self,request):
+        try:
+            data_list = Data.objects.all().values()
+            df = pd.DataFrame(data_list)  # Create DataFrame directly from values
+
+            if 'data_created' in df.columns:
+                df.drop(columns=['data_created'], inplace=True)
+
+            df.to_excel('DataExport.xlsx', index=False)
+            return Response({
+                'status': True,
+                'message': 'Data exported successfully'
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                'status': False,
+                'massage': 'not complete Export'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 
 
 
 
+
+
+
+
+
+
+
+
+            # df = pd.DataFrame.from_records(data_list.values(),columns=['data_created'])
+            # df.to_excel('DataExport.xlsx', index=False)
+            # return Response({
+            #     'status': True,
+            #     'message': 'data Export successfully'
+            # }, status=status.HTTP_200_OK)
 
 
 
