@@ -1,41 +1,137 @@
-from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
+from rest_framework.parsers import MultiPartParser, FormParser
 
 import pandas as pd
 from .serializers import DataSerializers
-from . models import Data
+from .models import Data
 
 
-
-class DisplayData(generics.ListCreateAPIView):
-    queryset = Data.objects.all()
+class ImportApiView(APIView):
     serializer_class = DataSerializers
+    parser_classes = [MultiPartParser,FormParser]
+    # queryset = Data.objects.all()
 
-    def post(self, request, *args, **kwargs):
-        df = pd.read_excel('./Excel_Data.xlsx',header =None, names=['date_time','location','name','product','quantity','unit_price','total_price'])
+    def post(self, request):
+        try :
+            data = request.FILES
+            serializer = self.serializer_class(data=data)
+            if not serializer.is_valid():
+                return Response({
+                    'status':False,
+                    'massage': 'Provide a valid file'
+                },status=status.HTTP_400_BAD_REQUEST)
 
-        data_list = []
-        for index, row in df.iterrows():
-            data_dict = {
-                'date_time': row['date_time'],  
-                'location': row['location'],  
-                'name': row['name'], 
-                'product': row['product'], 
-                'quantity': row['quantity'], 
-                'unit_price': row['unit_price'], 
-                'total_price': row['total_price'], 
-            }
+            exel_file = data.get('file')
+            df = pd.read_excel(exel_file,sheet_name=0)
 
-            data_list.append(data_dict)
+            data_list = []
+            for index, row in df.iterrows():
+                date = row['date']
+                location = row['location']
+                name = row['name']
+                product = row['product']
+                quantity = row['quantity']
+                unit_price = row['unit_price']
+                total_price = row['total_price']
+                data = Data.objects.all()
+                if data.exist():
+                    continue
+                date = Data(
+                    date=date,
+                    location=location,
+                    name=name,
+                    product=product,
+                    quantity=quantity,
+                    unit_price=unit_price,
+                    total_price=total_price,
+                )
+                data_list.append(data)
+            Data.objects.bulk_create(data_list)
+            return Response({
+                'status': True,
+                'massage': 'data imported successfully'
+            }, status=status.HTTP_201_CREATED)
 
-        print(f'data frame: {df}')
-        serializer = self.get_serializer(data=data_list, many=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+        except Exception as e :
+            return Response({
+                'status': False,
+                'massage':'not complete import'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+        # df = pd.read_excel('./Excel_Data.xlsx', header=None,
+        #                    names=['date', 'location', 'name', 'product', 'quantity', 'unit_price', 'total_price'])
+        #
+        # data_list = []
+        # for index, row in df.iterrows():
+        #     data_dict = {
+        #         'date': row['date'],
+        #         'location': row['location'],
+        #         'name': row['name'],
+        #         'product': row['product'],
+        #         'quantity': row['quantity'],
+        #         'unit_price': row['unit_price'],
+        #         'total_price': row['total_price'],
+        #     }
+        #     # df['date_time'] = pd.to_datetime(df['date_time'], errors='coerce').dt.strftime('%Y-%m-%d')
+        #
+        #     data_list.append(data_dict)
+        #
+        # print(f'data frame: {df}')
+        # serializer = self.get_serializer(data=data_list, many=True)
+        # serializer.is_valid(raise_exception=True)
+        # serializer.save()
+        # return Response(serializer.data, status=status.HTTP_201_CREATED)
+        #
+        #
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# class DisplayData(generics.ListCreateAPIView):
+#     queryset = Data.objects.all()
+#     serializer_class = DataSerializers
+#
+#     def post(self, request, *args, **kwargs):
+#         df = pd.read_excel('./Excel_Data.xlsx', header=None,
+#                            names=['date', 'location', 'name', 'product', 'quantity', 'unit_price', 'total_price'])
+#
+#         data_list = []
+#         for index, row in df.iterrows():
+#             data_dict = {
+#                 'date': row['date'],
+#                 'location': row['location'],
+#                 'name': row['name'],
+#                 'product': row['product'],
+#                 'quantity': row['quantity'],
+#                 'unit_price': row['unit_price'],
+#                 'total_price': row['total_price'],
+#             }
+#             # df['date_time'] = pd.to_datetime(df['date_time'], errors='coerce').dt.strftime('%Y-%m-%d')
+#
+#             data_list.append(data_dict)
+#
+#         print(f'data frame: {df}')
+#         serializer = self.get_serializer(data=data_list, many=True)
+#         serializer.is_valid(raise_exception=True)
+#         serializer.save()
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 
 
@@ -59,25 +155,3 @@ class DisplayData(generics.ListCreateAPIView):
 #             return Response(serializer.data, status=status.HTTP_201_CREATED)
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 #     return Response({"error": "No file found in request"}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
